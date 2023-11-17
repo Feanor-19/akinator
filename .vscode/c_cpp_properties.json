@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name": "Cpp",
+            "includePath": [
+                "../../mylibheaders"
+            ],
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}
