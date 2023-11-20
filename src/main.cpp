@@ -1,55 +1,22 @@
 #include <stdio.h>
 
+#include "akinator.h"
+#include "mystring.h"
 #include "../../../mylibheaders/tree.h"
 // TODO - поправить инклюды, чтобы их воспринимал компилятор (VS CODE все понимает уже)
 
-void int_dtor(void *data);
-
-void int_print(FILE* stream, void *data);
-
 int main()
 {
-    Tree tree = {};
-    tree_ctor(&tree, sizeof(int), int_dtor, int_print );
+    //Database database = init_and_load_database();
 
-    int arr[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    size_t cap = 3;
+    char *str = (char *) calloc(cap, sizeof(char));
 
-    tree_insert_root(&tree, &arr[0]);
+    AkinatorStatus status = read_tree_node_data(stdin, &str, &cap);
 
-    tree_insert_data_as_left_child(&tree, tree_get_root(&tree), &arr[1]);
+    printf("chars: <%llu>, string: <%s>\n", cap, str);
 
-    tree_insert_data_as_right_child(&tree, tree_get_root(&tree), &arr[2]);
-
-    TreeNode *node1 = tree_get_left_child( tree_get_root( &tree ) );
-
-    tree_insert_data_as_left_child(&tree, node1, &arr[3]);
-
-    tree_insert_data_as_right_child(&tree, node1, &arr[4]);
-
-    TreeNode *node2 = tree_get_right_child( tree_get_root( &tree ) );
-
-    tree_insert_data_as_right_child(&tree, node2, &arr[5]);
-
-    TreeNode *node5 = tree_get_right_child(node2);
-
-    tree_insert_data_as_left_child(&tree, node5, &arr[6]);
-
-    TREE_DUMP(&tree, 0);
-
-    tree_delete_left_child(&tree, node1);
-
-    tree_delete_left_child(&tree, tree_get_right_child(node2));
-
-    TREE_DUMP(&tree, 0);
-
-    tree_dtor(&tree);
 
     return 0;
 }
 
-void int_dtor(void *data) { data = (char*) data + 1; }
-
-void int_print(FILE* stream, void *data)
-{
-    fprintf(stream, "%d", *((int*) data) );
-}
