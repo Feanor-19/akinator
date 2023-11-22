@@ -7,15 +7,11 @@
 
 int main()
 {
-    //Database database = init_and_load_database();
+    Database database = init_and_load_database();
 
-    size_t cap = 3;
-    char *str = (char *) calloc(cap, sizeof(char));
+    TREE_DUMP(&database.tree, 0);
 
-    AkinatorStatus status = read_tree_node_data(stdin, &str, &cap);
-
-    printf("chars: <%llu>, string: <%s>\n", cap, str);
-
+    database_dtor(&database);
 
     return 0;
 }

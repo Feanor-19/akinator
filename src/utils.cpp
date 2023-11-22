@@ -17,3 +17,8 @@ void skip_spaces(FILE *stream)
     ungetc(c, stream);
 }
 
+void skip_spaces(DataFile *data_file)
+{
+    while ( isspace(data_file->file_buf.buf[ data_file->pointer ]) )
+        data_file->pointer++;
+}
