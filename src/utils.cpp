@@ -22,3 +22,13 @@ void skip_spaces(DataFile *data_file)
     while ( isspace(data_file->file_buf.buf[ data_file->pointer ]) )
         data_file->pointer++;
 }
+
+int is_dbl_zero(double x)
+{
+    return abs(x) < DBL_PRECISION;
+}
+
+int are_dbls_equal(double a, double b)
+{
+    return is_dbl_zero(a - b);
+}

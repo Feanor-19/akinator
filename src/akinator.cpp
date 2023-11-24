@@ -16,7 +16,10 @@ Database init_and_load_database()
 
     if ( ans )
     {
-        char *data_file_name = get_data_file_name();
+		printf( "Well, tell me than the name of the file, containing the database. "
+			"The file must be created by me, for I'm not going to root around "
+			"in someone's silly writings.\n" );
+        char *data_file_name = get_data_file_name("r");
 
 		Tree tree = read_tree_from_file(data_file_name);
 
@@ -33,12 +36,102 @@ Database init_and_load_database()
 
 void database_dtor( Database *database_ptr )
 {
+	assert(database_ptr);
+
 	tree_dtor(&database_ptr->tree);
 
 	if ( database_ptr->file_name )
 		free(database_ptr->file_name);
 
 	*database_ptr = {};
+}
+
+AkinatorStatus main_loop( Database *database )
+{
+	assert(database);
+
+	printf(	"So, what exactly do you want to do? "
+			"Play the [G]uess game with me, "
+			"learn a d[e]finition of some object from the database, "
+			"[c]ompare two objects, s[h]ow database "
+			"or just ra[pi]dly leave?\nChoose wisely!\n");
+
+	while (1)
+	{
+		UserAns ans = get_ans_main_loop();
+
+		switch (ans)
+		{
+		case GUESS:
+
+			break;
+		case DEFINITION:
+
+			break;
+		case COMPARE:
+
+			break;
+		case SHOW_DATABASE:
+			choice_show_database(database);
+			break;
+		case LEAVE:
+			choice_leave(database);
+			return AKINATOR_STATUS_OK;
+			break;
+		case NO:
+		case YES:
+		default:
+			assert(0);
+			break;
+		}
+
+		printf(	"So, what now? Choose from the same range of options. "
+				"No, I won't remind them for you. I am not a parrot, "
+				"but an advanced AI.\n");
+	}
+
+	assert(0);
+	return AKINATOR_STATUS_OK;
+}
+
+UserAns get_ans_main_loop()
+{
+	const double ANS_G 	= 6.674E-11;
+	const double ANS_E 	= 2.718;
+	const double ANS_C	= 2.997E8;
+	const double ANS_H 	= 6.626E-34;
+	const double ANS_PI	= 3.141;
+
+	while (1)
+	{
+		double ans = 0;
+		if ( scanf("%lf", &ans) == 1)
+		{
+			clear_inp(stdin);
+			if 		( are_dbls_equal(ans, ANS_G) )
+				return GUESS;
+			else if ( are_dbls_equal(ans, ANS_E) )
+				return DEFINITION;
+			else if ( are_dbls_equal(ans, ANS_C) )
+				return COMPARE;
+			else if ( are_dbls_equal(ans, ANS_H) )
+				return SHOW_DATABASE;
+			else if ( are_dbls_equal(ans, ANS_PI) )
+				return LEAVE;
+		}
+
+		printf(	"Well, I see you aren't that smart. In case "
+				"you still haven't got what to type to express your choice, "
+				"I deign to explain it. Just type values of math and physics "
+				"constants, written in corresponding square brackets. For example, "
+				"if you wanted to choose [h], which is Planck constant, you would "
+				"type 6.626E-34. Yes, always leave just three digits - truncated, "
+				"not rounded. Good luck...\n");
+		clear_inp(stdin);
+	}
+
+	assert(0);
+	return NO;
 }
 
 Database create_empty_database()
@@ -54,11 +147,9 @@ Database create_empty_database()
 	return {tree, NULL};
 }
 
-char *get_data_file_name()
+char *get_data_file_name(const char *file_mode)
 {
-	printf( "Well, tell me than the name of the file, containing the database. "
-			"The file must be created by me, for I'm not going to root around "
-			"in someone's silly writings.\n" );
+
 	char *file_name = (char*) calloc(FILE_NAME_DEFAULT_LEN, sizeof(char));
 	size_t file_name_cap = FILE_NAME_DEFAULT_LEN;
 
@@ -66,14 +157,13 @@ char *get_data_file_name()
 	file_name[ strlen(file_name) - 1] = '\0';
 
 	FILE *file = NULL;
-	while ( !(file = fopen(file_name, "r")) )
+	while ( !(file = fopen(file_name, file_mode)) )
 	{
 		printf( "Do not try to fool me, there is no file with such a name. "
 				"Relieve me of your silly jokes. Try again.\n" );
 		my_getline(&file_name, &file_name_cap, stdin);
 		file_name[ strlen(file_name) - 1] = '\0';
 	}
-	//clear_inp(stdin);
 
 	fclose(file);
 
@@ -110,6 +200,7 @@ Tree read_tree_from_file(const char *file_name)
 
 int datafile_getchar(DataFile *file)
 {
+	assert(file);
 	if ( file->pointer >= file->file_buf.buf_size )
 		return -1;
 
@@ -118,6 +209,7 @@ int datafile_getchar(DataFile *file)
 
 void datafile_ungetc(DataFile *file)
 {
+	assert(file);
 	file->pointer--;
 }
 
@@ -235,13 +327,14 @@ void read_tree_node(DataFile *file,
 void tree_data_dtor(void *data_ptr)
 {
 	assert(data_ptr);
-	free( *((char **) (data_ptr)) );
+	free( get_str_from_node_data(data_ptr) );
 }
 
 void tree_print_data(FILE *stream, void *data_ptr)
 {
 	assert(data_ptr);
-	fprintf(stream, "\"%s\"", *((char **) (data_ptr)));
+	assert(stream);
+	fprintf(stream, "\"%s\"", get_str_from_node_data(data_ptr) );
 }
 
 AkinatorStatus read_tree_node_data(DataFile *file, char **str_ptr, size_t *capacity_ptr)
@@ -292,11 +385,15 @@ void print_err_message_and_exit(AkinatorStatus err)
 	printf("Something went wrong: <%s>.\n Starting preparations for self-destruction...\n",
 			akinator_status_messages[(int) err]);
 
-	for (int i = 5; i <= 0; i--)
+	for (int i = 5; i > 0; i--)
 	{
 		sleep(1);
 		printf("%d\n", i);
+		fflush(stdout);
 	}
+
+	printf("BOOM\n");
+	fflush(stdout);
 
 	abort();
 }
@@ -315,4 +412,297 @@ UserAns get_ans_yes_or_no()
     clear_inp(stdin);
 
 	return (ans == 'y' ? YES : NO);
+}
+
+AkinatorStatus choice_show_database(Database *database)
+{
+	assert(database);
+
+	FILE *file = create_and_open_dot_file();
+	if (!file)
+		return AKINATOR_STATUS_ERROR_CANT_CREATE_IMG_FILE;
+
+	write_dot_file( file, database );
+
+	fclose(file);
+
+	run_dot_to_create_database_img();
+
+	show_database_img();
+
+	sleep(1);
+
+	delete_tmp_files();
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus choice_leave(Database *database)
+{
+	assert(database);
+
+	printf(	"Well, thats not a wise choice, but I "
+			"can't decide for you! Do you want to save "
+			"changes in the database? [y/n]\n");
+	UserAns ans = get_ans_yes_or_no();
+	if (ans)
+	{
+		if ( database->file_name )
+		{
+			printf( "Do you want to rewrite the file? [y/n]\n"
+			"If you answer 'no', a new file will be created.\n");
+
+			ans = get_ans_yes_or_no();
+			if (!ans)
+			{
+				printf( "Tell me the name of the file to be created. "
+						"And don't be silly this time, I'm pretty "
+						"tired of you.\n");
+				database->file_name = get_data_file_name("w");
+			}
+		}
+		else
+		{
+			printf( "Tell me the name of the file to be created. "
+					"And don't be silly this time, I'm pretty "
+					"tired of you\n");
+			database->file_name = get_data_file_name("w");
+		}
+
+		write_database_to_file( database );
+
+		printf("Done!\n");
+	}
+
+	database_dtor(database);
+	print_err_message_and_exit(AKINATOR_STATUS_ERROR_CANT_LEAVE_RUNNING_TRAIN);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus choice_compare(Database *database)
+{
+	assert(database);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus choice_definition(Database *database)
+{
+	assert(database);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus choice_guess(Database *database)
+{
+	assert(database);
+
+	printf( "So, the rules are simple, even YOU are able to "
+			"understand them. You think of an object, I guess it, "
+			"according to your database. I'll ask you questions, "
+			"you'll answer just 'yes' or 'no'. Well, let's begin!\n");
+
+	guess(database, tree_get_root(&database->tree) );
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus guess(Database *database, TreeNode *node_ptr)
+{
+	assert(database);
+	assert(node_ptr);
+
+	if ( !is_node_leaf(node_ptr) )
+	{
+		printf( "Is the following statement true about "
+				"your object? \"The object %s\" [y/n]\n",
+				get_str_from_node_data(node_ptr->data_ptr) );
+
+		UserAns ans = get_ans_yes_or_no();
+		if (ans)
+			guess(database, tree_get_right_child( node_ptr ) );
+		else
+			guess(database, tree_get_left_child( node_ptr ) );
+	}
+	else
+	{
+// TODO -
+	}
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus write_database_to_file(Database *database)
+{
+	assert(database);
+
+	FILE *file = fopen(database->file_name, "w");
+	if (!file)
+		return AKINATOR_STATUS_ERROR_CANT_SAVE_DATABASE;
+
+	write_tree_node_to_file( file, tree_get_root(&database->tree) );
+
+	fclose(file);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus write_tree_node_to_file(FILE *file, TreeNode *node_ptr)
+{
+	if (!node_ptr)
+	{
+		fprintf(file, " nil ");
+	}
+	else
+	{
+		fprintf(file, "( \"%s\" ", get_str_from_node_data(node_ptr->data_ptr) );
+		write_tree_node_to_file( file, tree_get_left_child(node_ptr) );
+		write_tree_node_to_file( file, tree_get_right_child(node_ptr) );
+		fprintf(file, " ) ");
+	}
+
+	return AKINATOR_STATUS_OK;
+}
+
+FILE *create_and_open_dot_file()
+{
+	return fopen(DATABASE_DOT_NAME, "w");
+}
+
+AkinatorStatus run_dot_to_create_database_img()
+{
+	system("dot " DATABASE_DOT_NAME " -Tjpg -o " DATABASE_IMG_NAME);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus write_dot_file( FILE *dot_file, Database *database )
+{
+	assert(dot_file);
+	assert(database);
+
+#define COLOR_BG            "#2D4059"
+#define COLOR_NODE_COLOR    "#ECC237"
+#define COLOR_NODE_FILL     "#EA5455"
+#define COLOR_LABEL_COLOR   "#EA5455"
+#define COLOR_LABEL_FILL    "#ECC237"
+#define COLOR_EDGE_LEFT     "#F07B3F"
+#define COLOR_EDGE_RIGHT    "#FFD460"
+#define COLOR_EDGE          "#8ccb5e"
+
+
+    // Dot header
+    fprintf(dot_file,   "digraph{\n"
+                        "splines=ortho;\n"
+                        "bgcolor=\"" COLOR_BG "\";"
+                        "\n\n\n");
+
+
+    // Nodes with data
+    TreeNode *curr_node = database->tree.head_of_all_nodes;
+    TreeNode **nodes_arr = (TreeNode**) calloc( database->tree.nodes_count, sizeof(TreeNode) );
+    for (size_t ind = 0; ind < database->tree.nodes_count; ind++)
+    {
+        if ( curr_node == NULL )
+        {
+            fprintf(stderr, "ERROR: something wrong with listing of nodes!\n");
+            break;
+        }
+
+        fprintf(dot_file,   "NODE_%llu[shape=\"record\", fontname=\"verdana\",\n"
+                            "style=bold, style=filled,\n"
+                            "color=\"" COLOR_NODE_COLOR "\", fillcolor=\"" COLOR_NODE_FILL "\",\n"
+                            "label = ",
+                            ind);
+        database->tree.print_data_func_ptr(dot_file, curr_node->data_ptr);
+        fprintf(dot_file,   "];\n\n");
+
+        nodes_arr[ind] = curr_node;
+        curr_node = curr_node->next;
+    }
+
+
+    // Edges
+    for (size_t ind = 0; ind < database->tree.nodes_count; ind++)
+    {
+        size_t left = 0;
+        size_t right = 0;
+        for (size_t i = 0; i < database->tree.nodes_count; i++)
+        {
+            if ( nodes_arr[i] == nodes_arr[ind]->left )
+            {
+                left = i;
+            }
+            else if ( nodes_arr[i] == nodes_arr[ind]->right )
+            {
+                right = i;
+            }
+        }
+
+        if ( nodes_arr[ind]->left )
+        {
+            fprintf(dot_file, "NODE_%llu->NODE_%llu"
+							  "[color=\"" COLOR_EDGE_LEFT "\", "
+							  "penwidth=2, fontcolor=\"" COLOR_EDGE_LEFT "\", "
+							  "fontname=\"verdana bold\", xlabel=\"NO\"];\n",
+                              ind, left);
+        }
+
+        if ( nodes_arr[ind]->right )
+        {
+            fprintf(dot_file, "NODE_%llu->NODE_%llu"
+							  "[color=\"" COLOR_EDGE_RIGHT "\", "
+							  "penwidth=2, fontcolor=\"" COLOR_EDGE_RIGHT "\", "
+							  "fontname=\"verdana bold\", xlabel=\"YES\"];\n",
+                              ind, right);
+        }
+
+        if ( nodes_arr[ind]->left && nodes_arr[ind]->right )
+        {
+            fprintf(dot_file,   "NODE_%llu->NODE_%llu[style=invis];\n"
+                                "{rank=same NODE_%llu NODE_%llu}",
+                                left, right, left, right);
+        }
+    }
+
+
+    fprintf(dot_file, "\n}\n");
+
+#undef COLOR_BG
+#undef COLOR_OCCUP_NODE_COLOR
+#undef COLOR_OCCUP_NODE_FILL
+#undef COLOR_FREE_NODE_COLOR
+#undef COLOR_FREE_NODE_FILL
+#undef COLOR_LABEL_COLOR
+#undef COLOR_LABEL_FILL
+#undef COLOR_EDGE_PREV
+#undef COLOR_EDGE_NEXT
+#undef COLOR_EDGE_FREE
+
+	free(nodes_arr);
+
+    return AKINATOR_STATUS_OK;
+
+}
+
+AkinatorStatus show_database_img()
+{
+	system(DATABASE_IMG_NAME);
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus delete_tmp_files()
+{
+	//system("del " DATABASE_DOT_NAME " " DATABASE_IMG_NAME);
+
+	return AKINATOR_STATUS_OK;
+}
+
+char * get_str_from_node_data(void *data_ptr)
+{
+	assert(data_ptr);
+
+	return *((char **) data_ptr);
 }

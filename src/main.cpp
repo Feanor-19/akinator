@@ -9,7 +9,7 @@ int main()
 {
     Database database = init_and_load_database();
 
-    TREE_DUMP(&database.tree, 0);
+    main_loop(&database);
 
     database_dtor(&database);
 

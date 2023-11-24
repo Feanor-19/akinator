@@ -28,6 +28,11 @@ enum UserAns
 {
     NO,
     YES,
+    GUESS,
+    DEFINITION,
+    COMPARE,
+    SHOW_DATABASE,
+    LEAVE,
 };
 
 #define DEF_AKINATOR_STATUS(name, message) AKINATOR_STATUS_##name,
@@ -40,7 +45,10 @@ enum AkinatorStatus
 
 const size_t FILE_NAME_DEFAULT_LEN      = 64;
 const size_t TREE_NODE_DATA_DEFAULT_LEN = 32;
-const char * const UNKNOWN_WHO = "Unknown who";
+const char * const UNKNOWN_WHO          = "Unknown who";
+
+#define DATABASE_IMG_NAME                 "tmp.jpg"
+#define DATABASE_DOT_NAME                 "tmp.dot"
 
 #define DEF_AKINATOR_STATUS(name, message) message,
 const char * const akinator_status_messages[] =
@@ -56,9 +64,11 @@ Database init_and_load_database();
 
 void database_dtor( Database *database_ptr );
 
+AkinatorStatus main_loop( Database *database );
+
 Database create_empty_database();
 
-char *get_data_file_name();
+char *get_data_file_name(const char *file_mode);
 
 Tree read_tree_from_file(const char *file_name);
 
@@ -83,5 +93,35 @@ int datafile_getchar(DataFile *file);
 void datafile_ungetc(DataFile *file);
 
 UserAns get_ans_yes_or_no();
+
+UserAns get_ans_main_loop();
+
+AkinatorStatus choice_guess(Database *database);
+
+AkinatorStatus guess(Database *database, TreeNode *node_ptr);
+
+AkinatorStatus choice_definition(Database *database);
+
+AkinatorStatus choice_compare(Database *database);
+
+AkinatorStatus choice_show_database(Database *database);
+
+AkinatorStatus choice_leave(Database *database);
+
+AkinatorStatus write_database_to_file(Database *database);
+
+AkinatorStatus write_tree_node_to_file(FILE *file, TreeNode *node_ptr);
+
+FILE *create_and_open_dot_file();
+
+AkinatorStatus write_dot_file( FILE *dot_file, Database *database );
+
+AkinatorStatus run_dot_to_create_database_img();
+
+AkinatorStatus show_database_img();
+
+AkinatorStatus delete_tmp_files();
+
+char * get_str_from_node_data(void *data_ptr);
 
 #endif
