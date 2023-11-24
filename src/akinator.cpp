@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <unistd.h>
 
+
 #include "utils.h"
 #include "mystring.h"
 #include "dedlist.h"
@@ -47,7 +48,8 @@ void database_dtor( Database *database_ptr )
 	*database_ptr = {};
 }
 
-AkinatorStatus main_loop( Database *database )
+__attribute__ ((noreturn))
+void main_loop( Database *database )
 {
 	assert(database);
 
@@ -78,7 +80,6 @@ AkinatorStatus main_loop( Database *database )
 			break;
 		case LEAVE:
 			choice_leave(database);
-			return AKINATOR_STATUS_OK;
 			break;
 		case NO:
 		case YES:
@@ -93,7 +94,6 @@ AkinatorStatus main_loop( Database *database )
 	}
 
 	assert(0);
-	return AKINATOR_STATUS_OK;
 }
 
 UserAns get_ans_main_loop()
@@ -381,6 +381,7 @@ AkinatorStatus read_tree_node_data(DataFile *file, char **str_ptr, size_t *capac
 	return AKINATOR_STATUS_OK;
 }
 
+__attribute__ ((noreturn))
 void print_err_message_and_exit(AkinatorStatus err)
 {
 	printf("Something went wrong: <%s>.\n Starting preparations for self-destruction...\n",
@@ -448,7 +449,8 @@ inline void create_new_database_file(Database *database)
 	database->file_name = get_data_file_name("w");
 }
 
-AkinatorStatus choice_leave(Database *database)
+__attribute__ ((noreturn))
+void choice_leave(Database *database)
 {
 	assert(database);
 
@@ -481,8 +483,6 @@ AkinatorStatus choice_leave(Database *database)
 
 	database_dtor(database);
 	print_err_message_and_exit(AKINATOR_STATUS_ERROR_CANT_LEAVE_RUNNING_TRAIN);
-
-	return AKINATOR_STATUS_OK;
 }
 
 inline void print_obj_def_part( ObjDefinition def, size_t path_ind )
@@ -579,7 +579,6 @@ AkinatorStatus choice_compare(Database *database)
 	free(obj2_name);
 
 	free_obj_def(&def1);
-
 	free_obj_def(&def2);
 
 	return AKINATOR_STATUS_OK;
@@ -622,17 +621,32 @@ ObjDefinition find_obj(Database *database, const char *str_to_find)
 {
 	assert(database);
 	assert(str_to_find);
-	// TODO - проверки!!!
+	// TODO - проверить везде что нет утечек памяти
 	int *reversed_path = (int*) calloc( database->tree.depth, sizeof(int) );
+	if (!reversed_path)
+		return {};
 	TreeNode **reversed_nodes_path = (TreeNode**) calloc( database->tree.depth, sizeof(TreeNode**) );
+	if (!reversed_nodes_path)
+	{
+		free(reversed_path);
+		return {};
+	}
 	size_t rev_path_ind = 0;
 
 	TreeNode *curr_node = find_node(database, str_to_find);
 	if (!curr_node)
+	{
+		free(reversed_path);
+		free(reversed_nodes_path);
 		return {};
+	}
 
 	if (curr_node == tree_get_root(&database->tree) )
+	{
+		free(reversed_path);
+		free(reversed_nodes_path);
 		return {};
+	}
 
 	TreeNode *parent = NULL;
 	while ( curr_node->parent )
@@ -651,7 +665,19 @@ ObjDefinition find_obj(Database *database, const char *str_to_find)
 
 	size_t path_len = rev_path_ind;
 	int *path = (int*) calloc( path_len, sizeof(int) );
+	{
+		free(reversed_path);
+		free(reversed_nodes_path);
+		return {};
+	}
 	TreeNode **nodes_path = (TreeNode**) calloc( path_len, sizeof(TreeNode**) );
+	{
+		free(path);
+		free(reversed_path);
+		free(reversed_nodes_path);
+		return {};
+	}
+
 	for ( size_t path_ind = 0; path_ind < path_len; path_ind++, rev_path_ind-- )
 	{
 		path[path_ind] 			= reversed_path[rev_path_ind - 1];

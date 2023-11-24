@@ -71,7 +71,7 @@ Database init_and_load_database();
 
 void database_dtor( Database *database_ptr );
 
-AkinatorStatus main_loop( Database *database );
+void main_loop( Database *database );
 
 Database create_empty_database();
 
@@ -119,7 +119,7 @@ AkinatorStatus choice_compare(Database *database);
 
 AkinatorStatus choice_show_database(Database *database);
 
-AkinatorStatus choice_leave(Database *database);
+void choice_leave(Database *database);
 
 AkinatorStatus write_database_to_file(Database *database);
 
