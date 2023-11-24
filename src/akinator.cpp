@@ -59,17 +59,18 @@ AkinatorStatus main_loop( Database *database )
 	while (1)
 	{
 		UserAns ans = get_ans_main_loop();
+		clear_inp(stdin);
 
 		switch (ans)
 		{
 		case GUESS:
-
+			choice_guess(database);
 			break;
 		case DEFINITION:
-
+			choice_definition(database);
 			break;
 		case COMPARE:
-
+			choice_compare(database);
 			break;
 		case SHOW_DATABASE:
 			choice_show_database(database);
@@ -107,7 +108,6 @@ UserAns get_ans_main_loop()
 		double ans = 0;
 		if ( scanf("%lf", &ans) == 1)
 		{
-			clear_inp(stdin);
 			if 		( are_dbls_equal(ans, ANS_G) )
 				return GUESS;
 			else if ( are_dbls_equal(ans, ANS_E) )
@@ -437,6 +437,16 @@ AkinatorStatus choice_show_database(Database *database)
 	return AKINATOR_STATUS_OK;
 }
 
+inline void create_new_database_file(Database *database)
+{
+	assert(database);
+
+	printf( "Tell me the name of the file to be created. "
+			"And don't be silly this time, I'm pretty "
+			"tired of you.\n");
+	database->file_name = get_data_file_name("w");
+}
+
 AkinatorStatus choice_leave(Database *database)
 {
 	assert(database);
@@ -455,18 +465,12 @@ AkinatorStatus choice_leave(Database *database)
 			ans = get_ans_yes_or_no();
 			if (!ans)
 			{
-				printf( "Tell me the name of the file to be created. "
-						"And don't be silly this time, I'm pretty "
-						"tired of you.\n");
-				database->file_name = get_data_file_name("w");
+				create_new_database_file(database);
 			}
 		}
 		else
 		{
-			printf( "Tell me the name of the file to be created. "
-					"And don't be silly this time, I'm pretty "
-					"tired of you\n");
-			database->file_name = get_data_file_name("w");
+			create_new_database_file(database);
 		}
 
 		write_database_to_file( database );
@@ -527,7 +531,7 @@ AkinatorStatus guess(Database *database, TreeNode *node_ptr)
 	}
 	else
 	{
-		printf( "Is it \"%s\"? [y/n]\n");
+		printf( "Is it \"%s\"? [y/n]\n", get_str_from_node_data(node_ptr->data_ptr));
 
 		UserAns ans = get_ans_yes_or_no();
 		if (ans)
@@ -543,10 +547,10 @@ AkinatorStatus guess(Database *database, TreeNode *node_ptr)
 					"Well, we can make it a little less miserable by adding "
 					"the object you've thought of. Do you want to do it? [y/n]\n");
 
-			UserAns ans = get_ans_yes_or_no();
+			ans = get_ans_yes_or_no();
 			if (ans)
 			{
-
+				add_object_to_database(database, node_ptr);
 			}
 		}
 	}
@@ -564,7 +568,11 @@ AkinatorStatus add_object_to_database(Database *database, TreeNode *node_ptr)
 	char *str = get_str_from_user();
 
 	tree_insert_data_as_right_child(&database->tree, node_ptr, &str);
-	tree_insert_data_as_left_child(&database->tree, node_ptr, node_ptr->data_ptr);
+
+	str = (char*) calloc( strlen( get_str_from_node_data(node_ptr->data_ptr) ) + 1, sizeof(char) );
+	strcpy(str, get_str_from_node_data(node_ptr->data_ptr) );
+
+	tree_insert_data_as_left_child(&database->tree, node_ptr, &str);
 
 	printf( "Listen carefully, it can be too hard for you to understand "
 			"from the first time, but I'll try to explain it in a very easy way. "
@@ -574,7 +582,7 @@ AkinatorStatus add_object_to_database(Database *database, TreeNode *node_ptr)
 
 	str = get_str_from_user();
 
-	tree_change_data(&database->tree, node_ptr, str);
+	tree_change_data(&database->tree, node_ptr, &str);
 
 	return AKINATOR_STATUS_OK;
 }
@@ -741,7 +749,7 @@ AkinatorStatus show_database_img()
 
 AkinatorStatus delete_tmp_files()
 {
-	//system("del " DATABASE_DOT_NAME " " DATABASE_IMG_NAME);
+	system("del " DATABASE_DOT_NAME " " DATABASE_IMG_NAME);
 
 	return AKINATOR_STATUS_OK;
 }
@@ -766,6 +774,8 @@ char * get_str_from_user()
 		UserAns ans = get_ans_yes_or_no();
 		if (ans)
 			break;
+		else
+			printf( "Well, now don't be silly and enter what you want.\n");
 	}
 	return str;
 }

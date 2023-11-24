@@ -1,0 +1,1 @@
+( "crafted silmarills" ( "is Galadriel's brother" ( "Unknown who"  nil  nil  ) ( "Finrod"  nil  nil  )  ) ( "Feanor"  nil  nil  )  ) 
