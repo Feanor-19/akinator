@@ -1,1 +1,1 @@
-( "crafted silmarills" ( "is Galadriel's brother" ( "Unknown who"  nil  nil  ) ( "Finrod"  nil  nil  )  ) ( "Feanor"  nil  nil  )  ) 
+( "crafted silmarills" ( "is Galadriel's brother" ( "was the closest Melkor's servant" ( "Unknown who"  nil  nil  ) ( "Sauron"  nil  nil  )  ) ( "Finrod"  nil  nil  )  ) ( "Feanor"  nil  nil  )  ) 

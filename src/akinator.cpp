@@ -485,9 +485,102 @@ AkinatorStatus choice_leave(Database *database)
 	return AKINATOR_STATUS_OK;
 }
 
+inline void print_obj_def_part( ObjDefinition def, size_t path_ind )
+{
+	assert(def.path);
+	assert(def.nodes_path);
+	assert(def.nodes_path[path_ind]);
+
+	if 		( def.path[path_ind] == 0 )
+	{
+		printf("NOT %s", get_str_from_node_data(def.nodes_path[path_ind]->data_ptr));
+	}
+	else if ( def.path[path_ind] == 1 )
+	{
+		printf("%s", get_str_from_node_data(def.nodes_path[path_ind]->data_ptr));
+	}
+	else
+		assert(0);
+}
+
 AkinatorStatus choice_compare(Database *database)
 {
 	assert(database);
+
+	printf( "Tell me the first object from the database you want to compare.\n");
+	char *obj1_name = get_str_from_user();
+
+	printf( "And the second object...\n");
+	char *obj2_name = get_str_from_user();
+
+	ObjDefinition def1 = find_obj(database, obj1_name);
+	if (!def1.path)
+	{
+		free(obj1_name);
+		free(obj2_name);
+		printf( "There is no this object in the database, fool! "
+				"Think before saying something next time!\n");
+		return AKINATOR_STATUS_OK;
+	}
+
+	ObjDefinition def2 = find_obj(database, obj2_name);
+	if (!def2.path)
+	{
+		free(obj1_name);
+		free(obj2_name);
+		free_obj_def(&def1);
+		printf( "There is no this object in the database, fool! "
+				"Think before saying something next time!\n");
+		return AKINATOR_STATUS_OK;
+	}
+
+	printf( "Here is the comparison:\n");
+	size_t path_ind = 0;
+	while ( path_ind < def1.path_len || path_ind < def2.path_len )
+	{
+		if 		( path_ind < def1.path_len && path_ind < def2.path_len )
+		{
+			if ( def1.path[path_ind] == def2.path[path_ind] )
+			{
+				printf( "They both ");
+				print_obj_def_part(def1, path_ind);
+				printf( ".\n");
+			}
+			else
+			{
+				printf( "\"%s\" ", obj1_name);
+				print_obj_def_part(def1, path_ind);
+				printf( ", but \"%s\" ", obj2_name);
+				print_obj_def_part(def2, path_ind);
+				printf( ".\n");
+			}
+		}
+		else if ( path_ind <  def1.path_len && path_ind >= def2.path_len )
+		{
+			printf( "\"%s\" ", obj1_name);
+			print_obj_def_part(def1, path_ind);
+			printf( ".\n");
+		}
+		else if ( path_ind >= def1.path_len && path_ind <  def2.path_len )
+		{
+			printf( "\"%s\" ", obj2_name);
+			print_obj_def_part(def2, path_ind);
+			printf( ".\n");
+		}
+		else
+		{
+			break;
+		}
+		path_ind++;
+	}
+	printf( "The comparison is done! It was too easy...\n");
+
+	free(obj1_name);
+	free(obj2_name);
+
+	free_obj_def(&def1);
+
+	free_obj_def(&def2);
 
 	return AKINATOR_STATUS_OK;
 }
@@ -514,18 +607,12 @@ AkinatorStatus choice_definition(Database *database)
 	printf( "Here is the definition:\n\"%s\"...\n", str);
 	for ( size_t path_ind = 0; path_ind < def.path_len; path_ind++ )
 	{
-		if 		(def.path[path_ind] == 0)
-			printf( "...NOT ");
-		else if (def.path[path_ind] == 1)
-			printf( "...");
-		else
-			assert(0);
-
-		printf("%s.\n", get_str_from_node_data(def.nodes_path[path_ind]->data_ptr) );
+		printf("...");
+		print_obj_def_part(def, path_ind);
+		printf(".\n");
 	}
 
-	free(def.path);
-	free(def.nodes_path);
+	free_obj_def(&def);
 	free(str);
 
 	return AKINATOR_STATUS_OK;
@@ -894,4 +981,13 @@ char * get_str_from_user()
 			printf( "Well, now don't be silly and enter what you want.\n");
 	}
 	return str;
+}
+
+void free_obj_def(ObjDefinition *def_ptr)
+{
+	if (def_ptr->path)
+		free(def_ptr->path);
+
+	if (def_ptr->nodes_path)
+		free(def_ptr->nodes_path);
 }

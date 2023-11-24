@@ -139,4 +139,6 @@ char * get_str_from_node_data(void *data_ptr);
 
 char * get_str_from_user();
 
+void free_obj_def(ObjDefinition *def_ptr);
+
 #endif
