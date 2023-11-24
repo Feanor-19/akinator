@@ -7,6 +7,9 @@
 
 int main()
 {
+    // Tree tree = read_tree_from_file("database_silm.txt");
+    // TREE_DUMP(&tree, 0);
+
     Database database = init_and_load_database();
 
     main_loop(&database);

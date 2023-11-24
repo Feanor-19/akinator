@@ -5,6 +5,7 @@
 
 #include "utils.h"
 #include "mystring.h"
+#include "dedlist.h"
 
 
 Database init_and_load_database()
@@ -495,7 +496,122 @@ AkinatorStatus choice_definition(Database *database)
 {
 	assert(database);
 
+	printf( "Tell me the name of the object from the database, "
+			"and I'll easily tell you its full definition. According "
+			"to database, of course.\n");
+
+	char *str = get_str_from_user();
+
+	ObjDefinition def = find_obj(database, str);
+
+	if (!def.path)
+	{
+		printf( "There is no this object in the database, fool! "
+				"Think before saying something next time!\n");
+		return AKINATOR_STATUS_OK;
+	}
+
+	printf( "Here is the definition:\n\"%s\"...\n", str);
+	for ( size_t path_ind = 0; path_ind < def.path_len; path_ind++ )
+	{
+		if 		(def.path[path_ind] == 0)
+			printf( "...NOT ");
+		else if (def.path[path_ind] == 1)
+			printf( "...");
+		else
+			assert(0);
+
+		printf("%s.\n", get_str_from_node_data(def.nodes_path[path_ind]->data_ptr) );
+	}
+
+	free(def.path);
+	free(def.nodes_path);
+	free(str);
+
 	return AKINATOR_STATUS_OK;
+}
+
+ObjDefinition find_obj(Database *database, const char *str_to_find)
+{
+	assert(database);
+	assert(str_to_find);
+	// TODO - проверки!!!
+	int *reversed_path = (int*) calloc( database->tree.depth, sizeof(int) );
+	TreeNode **reversed_nodes_path = (TreeNode**) calloc( database->tree.depth, sizeof(TreeNode**) );
+	size_t rev_path_ind = 0;
+
+	TreeNode *curr_node = find_node(database, str_to_find);
+	if (!curr_node)
+		return {};
+
+	if (curr_node == tree_get_root(&database->tree) )
+		return {};
+
+	TreeNode *parent = NULL;
+	while ( curr_node->parent )
+	{
+		parent = curr_node->parent;
+		if 		( tree_get_left_child(parent) == curr_node )
+			reversed_path[rev_path_ind] = 0;
+		else if ( tree_get_right_child(parent) == curr_node )
+			reversed_path[rev_path_ind] = 1;
+
+		reversed_nodes_path[rev_path_ind] = parent;
+
+		rev_path_ind++;
+		curr_node = parent;
+	}
+
+	size_t path_len = rev_path_ind;
+	int *path = (int*) calloc( path_len, sizeof(int) );
+	TreeNode **nodes_path = (TreeNode**) calloc( path_len, sizeof(TreeNode**) );
+	for ( size_t path_ind = 0; path_ind < path_len; path_ind++, rev_path_ind-- )
+	{
+		path[path_ind] 			= reversed_path[rev_path_ind - 1];
+		nodes_path[path_ind] 	= reversed_nodes_path[rev_path_ind - 1];
+	}
+
+	return {path, path_len, nodes_path};
+}
+
+TreeNode *find_node(Database *database, const char *str_to_find)
+{
+	assert(database);
+	assert(str_to_find);
+
+	Dedlist queue = {};
+	dedlist_ctor(&queue, database->tree.depth);
+
+	dedlist_push_tail(&queue, tree_get_root(&database->tree) );
+	size_t curr_size = 0;
+	TreeNode *curr_node = NULL;
+	int found = 0;
+	while ( ( dedlist_get_size(&queue, &curr_size), curr_size > 0 ) )
+	{
+		dedlist_get_head( &queue, &curr_node );
+		dedlist_delete_head( &queue );
+		assert(curr_node);
+
+		if ( strcmp( get_str_from_node_data( curr_node->data_ptr ), str_to_find ) == 0 )
+		{
+			found = 1;
+			break;
+		}
+		else
+		{
+			if ( curr_node->left )
+				dedlist_push_tail( &queue, curr_node->left );
+			if ( curr_node->right )
+				dedlist_push_tail( &queue, curr_node->right );
+		}
+	}
+
+	dedlist_dtor(&queue);
+
+	if (found)
+		return curr_node;
+
+	return NULL;
 }
 
 AkinatorStatus choice_guess(Database *database)

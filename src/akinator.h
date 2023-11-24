@@ -3,7 +3,7 @@
 
 #include <memory.h>
 
-#include "../../../mylibheaders/tree.h"
+#include "..\..\..\mylibheaders\tree.h"
 #include "..\..\..\mylibheaders\onegin.h"
 
 struct Database
@@ -33,6 +33,13 @@ enum UserAns
     COMPARE,
     SHOW_DATABASE,
     LEAVE,
+};
+
+struct ObjDefinition
+{
+    int *path               = NULL;
+    size_t path_len         = 0;
+    TreeNode **nodes_path    = NULL;
 };
 
 #define DEF_AKINATOR_STATUS(name, message) AKINATOR_STATUS_##name,
@@ -103,6 +110,10 @@ AkinatorStatus guess(Database *database, TreeNode *node_ptr);
 AkinatorStatus add_object_to_database(Database *database, TreeNode *node_ptr);
 
 AkinatorStatus choice_definition(Database *database);
+
+ObjDefinition find_obj(Database *database, const char *str_to_find);
+
+TreeNode *find_node(Database *database, const char *str_to_find);
 
 AkinatorStatus choice_compare(Database *database);
 
