@@ -43,9 +43,9 @@ enum AkinatorStatus
 #undef DEF_AKINATOR_STATUS
 
 
-const size_t FILE_NAME_DEFAULT_LEN      = 64;
-const size_t TREE_NODE_DATA_DEFAULT_LEN = 32;
-const char * const UNKNOWN_WHO          = "Unknown who";
+const size_t FILE_NAME_DEFAULT_LEN  = 64;
+const size_t STR_DEFAULT_LEN        = 32;
+const char * const UNKNOWN_WHO      = "Unknown who";
 
 #define DATABASE_IMG_NAME                 "tmp.jpg"
 #define DATABASE_DOT_NAME                 "tmp.dot"
@@ -100,6 +100,8 @@ AkinatorStatus choice_guess(Database *database);
 
 AkinatorStatus guess(Database *database, TreeNode *node_ptr);
 
+AkinatorStatus add_object_to_database(Database *database, TreeNode *node_ptr);
+
 AkinatorStatus choice_definition(Database *database);
 
 AkinatorStatus choice_compare(Database *database);
@@ -123,5 +125,7 @@ AkinatorStatus show_database_img();
 AkinatorStatus delete_tmp_files();
 
 char * get_str_from_node_data(void *data_ptr);
+
+char * get_str_from_user();
 
 #endif

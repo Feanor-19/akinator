@@ -227,7 +227,7 @@ void read_root_node(DataFile *file, Tree *tree_ptr, AkinatorStatus *status)
 		return;
 	}
 
-	size_t cap = TREE_NODE_DATA_DEFAULT_LEN;
+	size_t cap = STR_DEFAULT_LEN;
 	char *str = (char *) calloc(cap, sizeof(char));
 	*status = read_tree_node_data(file, &str, &cap);
 	if ((*status))
@@ -269,7 +269,7 @@ void read_tree_node(DataFile *file,
 	if (datafile_getchar(file) == '(')
 	{
 		skip_spaces(file);
-		size_t cap = TREE_NODE_DATA_DEFAULT_LEN;
+		size_t cap = STR_DEFAULT_LEN;
     	char *str = (char *) calloc(cap, sizeof(char));
 
 		*err = read_tree_node_data(file, &str, &cap);
@@ -527,8 +527,54 @@ AkinatorStatus guess(Database *database, TreeNode *node_ptr)
 	}
 	else
 	{
-// TODO -
+		printf( "Is it \"%s\"? [y/n]\n");
+
+		UserAns ans = get_ans_yes_or_no();
+		if (ans)
+		{
+			printf( "It was very easy. You are so boring... "
+					"Why did you come, and not someone smarter! "
+					"Anyway, we're already on our way, is is too late "
+					"to change anything.\n");
+		}
+		else
+		{
+			printf( "This pathetic database doesn't have any suitable records. "
+					"Well, we can make it a little less miserable by adding "
+					"the object you've thought of. Do you want to do it? [y/n]\n");
+
+			UserAns ans = get_ans_yes_or_no();
+			if (ans)
+			{
+
+			}
+		}
 	}
+
+	return AKINATOR_STATUS_OK;
+}
+
+AkinatorStatus add_object_to_database(Database *database, TreeNode *node_ptr)
+{
+	assert(database);
+	assert(node_ptr);
+
+	printf( "So, name the object.\n");
+
+	char *str = get_str_from_user();
+
+	tree_insert_data_as_right_child(&database->tree, node_ptr, &str);
+	tree_insert_data_as_left_child(&database->tree, node_ptr, node_ptr->data_ptr);
+
+	printf( "Listen carefully, it can be too hard for you to understand "
+			"from the first time, but I'll try to explain it in a very easy way. "
+			"Complete the following sentence in a such way that "
+			"it unambiguously differs your object from \"%s\": "
+			"\"The object...\"\n", get_str_from_node_data(node_ptr->data_ptr) );
+
+	str = get_str_from_user();
+
+	tree_change_data(&database->tree, node_ptr, str);
 
 	return AKINATOR_STATUS_OK;
 }
@@ -705,4 +751,21 @@ char * get_str_from_node_data(void *data_ptr)
 	assert(data_ptr);
 
 	return *((char **) data_ptr);
+}
+
+char * get_str_from_user()
+{
+	size_t cap = STR_DEFAULT_LEN;
+	char *str = (char*) calloc(cap, sizeof(char));
+	while (1)
+	{
+		my_getline(&str, &cap, stdin);
+		str[ strlen(str) - 1 ] = '\0';
+
+		printf( "You entered \"%s\". Is that right? [y/n]\n", str);
+		UserAns ans = get_ans_yes_or_no();
+		if (ans)
+			break;
+	}
+	return str;
 }
