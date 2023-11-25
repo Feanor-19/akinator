@@ -665,12 +665,14 @@ ObjDefinition find_obj(Database *database, const char *str_to_find)
 
 	size_t path_len = rev_path_ind;
 	int *path = (int*) calloc( path_len, sizeof(int) );
+	if (!path)
 	{
 		free(reversed_path);
 		free(reversed_nodes_path);
 		return {};
 	}
 	TreeNode **nodes_path = (TreeNode**) calloc( path_len, sizeof(TreeNode**) );
+	if (!nodes_path)
 	{
 		free(path);
 		free(reversed_path);
